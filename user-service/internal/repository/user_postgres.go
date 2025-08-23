@@ -38,16 +38,17 @@ func (u *UserPostgres) Update(ctx context.Context, request domain.UserCreateRequ
 	//SQL запрос для обновления логина и пароля у User по User.IDA
 	query := `UPDATE users SET login = $1, password_hash = $2 WHERE id = $3`
 	//Метод Exec позволяет нам сделать SQL запрос к нашей бд
-	var hashedPassword string
-	if request.Password != "" {
-		hashedPassword, err := hash.HashPassword(request.Password)
+	if Password := request.Password; Password != "" {
+		hashedPassword, err := hash.HashPassword(Password)
 		if err != nil {
 			return err
 		}
 		_, err = u.pool.Exec(ctx, query, request.Login, hashedPassword, request.ID)
-		if err != nil {
-			return err
-		}
+		return err
+	}
+	_, err := u.pool.Exec(ctx, query, request.Login, request.ID)
+	if err != nil {
+		return err
 	}
 	return nil
 }
