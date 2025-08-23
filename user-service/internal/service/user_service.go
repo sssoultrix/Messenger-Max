@@ -5,7 +5,6 @@ import (
 	"messenger-max/user-service/internal/domain"
 )
 
-// Описание контракта для любого репозитория который будет работать с user_service
 type Repository interface {
 	Create(ctx context.Context, request domain.UserCreateRequest) error
 	Update(ctx context.Context, request domain.UserCreateRequest) error
