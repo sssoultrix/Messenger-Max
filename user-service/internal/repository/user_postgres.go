@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"messenger-max/user-service/internal/domain"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+	"messenger-max/user-service/internal/domain"
+	"messenger-max/user-service/pkg/hash"
 )
 
 // Используем pgxpool для работы с бд
@@ -24,18 +24,33 @@ func (u UserPostgres) Create(ctx context.Context, request domain.UserCreateReque
 	query := `INSERT INTO users (login, password_hash) VALUES ($1, $2)`
 
 	//Метод Exec позволяет нам сделать SQL запрос к нашей бд
-	_, err := u.pool.Exec(ctx, query, request.Login, request.Password)
+	hashedPassword, err := hash.HashPassword(request.Password)
+	if err != nil {
+		return err
+	}
+	_, err = u.pool.Exec(ctx, query, request.Login, hashedPassword)
 	return err
 }
 
 // Метод обновления полей структуры User уже существующей в бд
 // Для метода Update используется отдельная структура UserCreateRequest
 func (u *UserPostgres) Update(ctx context.Context, request domain.UserCreateRequest) error {
-	//SQL запрос для обновления логина и пароля у User по User.ID
+	//SQL запрос для обновления логина и пароля у User по User.IDA
 	query := `UPDATE users SET login = $1, password_hash = $2 WHERE id = $3`
 	//Метод Exec позволяет нам сделать SQL запрос к нашей бд
-	_, err := u.pool.Exec(ctx, query, request.Login, request.Password)
-	return err
+	if Password := request.Password; Password != "" {
+		hashedPassword, err := hash.HashPassword(Password)
+		if err != nil {
+			return err
+		}
+		_, err = u.pool.Exec(ctx, query, request.Login, hashedPassword, request.ID)
+		return err
+	}
+	_, err := u.pool.Exec(ctx, query, request.Login, request.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Метод для удаления уже существующего в бд User
