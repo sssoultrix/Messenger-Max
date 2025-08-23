@@ -16,7 +16,7 @@ func NewUserPostgres(pool *pgxpool.Pool) *UserPostgres {
 }
 
 func (u UserPostgres) Create(ctx context.Context, request domain.UserCreateRequest) error {
-	query := `INSERT INTO users (login, password_hash, name) VALUES ($1, $2, $3) RETURNING id`
+	panic("implement me")
 }
 
 func (u UserPostgres) Update(ctx context.Context, request domain.UserCreateRequest) error {
