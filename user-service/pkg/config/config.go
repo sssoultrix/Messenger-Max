@@ -32,7 +32,6 @@ func LoadConfig() *Config {
 	return cfg
 }
 
-// Вспомогательная функция: возвращает значение переменной окружения или дефолт
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
