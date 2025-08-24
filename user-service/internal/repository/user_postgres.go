@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"messenger-max/user-service/internal/domain"
-	"messenger-max/user-service/pkg/hash"
 	"messenger-max/user-service/pkg/logger"
 )
 
@@ -18,13 +17,7 @@ func NewUserPostgres(pool *pgxpool.Pool) *UserPostgres {
 
 func (u UserPostgres) Create(ctx context.Context, request domain.UserCreateRequest) error {
 	query := `INSERT INTO users (login, password_hash) VALUES ($1, $2)`
-
-	hashedPassword, err := hash.HashPassword(request.Password)
-	if err != nil {
-		logger.Log.Error("failed to hash password", "error", err)
-		return err
-	}
-	_, err = u.pool.Exec(ctx, query, request.Login, hashedPassword)
+	_, err := u.pool.Exec(ctx, query, request.Login, request.Password)
 	if err != nil {
 		logger.Log.Error("failed to insert user", "error", err)
 		return err
@@ -35,19 +28,12 @@ func (u UserPostgres) Create(ctx context.Context, request domain.UserCreateReque
 
 func (u *UserPostgres) Update(ctx context.Context, request domain.UserCreateRequest) error {
 	query := `UPDATE users SET login = $1, password_hash = $2 WHERE id = $3`
-	if Password := request.Password; Password != "" {
-		hashedPassword, err := hash.HashPassword(Password)
-		if err != nil {
-			logger.Log.Error("failed to hash password", "error", err)
-			return err
-		}
-		_, err = u.pool.Exec(ctx, query, request.Login, hashedPassword, request.ID)
-		if err != nil {
-			logger.Log.Error("failed to update user", "error", err)
-			return err
-		}
+	_, err := u.pool.Exec(ctx, query, request.Login, request.Password, request.ID)
+	if err != nil {
+		logger.Log.Error("failed to update user", "error", err)
+		return err
 	}
-	_, err := u.pool.Exec(ctx, query, request.Login, request.ID)
+	_, err = u.pool.Exec(ctx, query, request.Login, request.ID)
 	if err != nil {
 		logger.Log.Error("failed to insert user", "error", err)
 		return err

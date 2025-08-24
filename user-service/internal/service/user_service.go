@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"messenger-max/user-service/internal/domain"
+	"messenger-max/user-service/pkg/hash"
+	"messenger-max/user-service/pkg/logger"
 )
 
 type Repository interface {
@@ -23,10 +25,24 @@ func NewUserService(repo Repository) *UserService {
 }
 
 func (u *UserService) Create(ctx context.Context, request domain.UserCreateRequest) error {
+	var err error
+	request.Password, err = hash.HashPassword(request.Password)
+	if err != nil {
+		logger.Log.Error("failed to hash password", "error", err)
+		return err
+	}
 	return u.repo.Create(ctx, request)
 }
 
 func (u *UserService) Update(ctx context.Context, request domain.UserCreateRequest) error {
+	if Password := request.Password; Password != "" {
+		hashedPassword, err := hash.HashPassword(Password)
+		if err != nil {
+			logger.Log.Error("failed to hash password", "error", err)
+			return err
+		}
+		request.Password = hashedPassword
+	}
 	return u.repo.Update(ctx, request)
 }
 
